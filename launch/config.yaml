@@ -1,0 +1,14 @@
+# which go to the model you want to use
+cfg_root: "/home/zack/Desktop/CADDN/tools/cfgs/kitti_models/CaDDN.yaml"
+
+# which go to the .pth
+model_path: "/home/zack/Desktop/CADDN/checkpoints/deeplabv3_resnet101_coco-586e9e4e.pth"
+
+# pointcloud_topic in the bag if you are not sure
+# rosbag info xxx.bag check the topic name
+pointcloud_topic: "/home/zack/kitti/2011_09_26_drive_0005_sync/2011_09_26/2011_09_26_drive_0005_sync/data/velodyne_points" # default is from kitti2bag: /velodyne_points
+
+# only the predict probablity over this threshold will be draw a box
+threshold: 0.8
+
+viz_rate: 1.0

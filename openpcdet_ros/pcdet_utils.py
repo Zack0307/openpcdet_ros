@@ -84,7 +84,7 @@ def image_publish(frame, cam_pub):
     cam_pub.publish(cv_bridge.cv2_to_imgmsg(img, encoding='bgr8'))
 
 def publish_pcl(frame, PCL, clock):
-    pcl = np.fromfile(os.path.join(Image_DATA_PATH, 'velodyne_points/data/%010d.bin' % frame), dtype=np.float32).reshape(-1, 4)
+    pcl = np.fromfile(os.path.join(Image_DATA_PATH, 'velodyne_points/data/%010d.bin' % frame), dtype=np.float64).reshape(-1, 4)
     header = Header()
     header.stamp = clock.now().to_msg()
     header.frame_id = FRAME_ID
@@ -154,6 +154,6 @@ def xyz_array_to_pointcloud2(points_sum, stamp=None, frame_id=None):
     msg.point_step = 12
     msg.row_step = points_sum.shape[0]
     msg.is_dense = int(np.isfinite(points_sum).all())
-    msg.data = np.asarray(points_sum, np.float32).tostring()
+    msg.data = np.asarray(points_sum, np.float64).tostring()
     return msg
 

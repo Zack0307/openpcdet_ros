@@ -20,6 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'pcdet_kitti = openpcdet_ros.pcdet_kitti:main',
         ],
     },
 )

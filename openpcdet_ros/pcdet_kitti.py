@@ -23,7 +23,6 @@ class PcdetNode(Node):
             self.timer = self.create_timer(0.1, self.publish_data)  # 每 0.1 秒呼叫一次
     
     def publish_data(self):
-            
             image_publish(self.frame, self.cam_pub)
             cam_publish(self.frame, self.PCL, self.get_clock())
             lidar_callback(self.PCL, self.proc_1)
@@ -32,9 +31,9 @@ class PcdetNode(Node):
             # publish_imu(self.frame, self.imu, self.get_clock())
             # publish_gps(self.frame, self.gps, self.get_clock())
             # publish_3d_box(self.frame, self.box, self.get_clock())
-            # self.frame += 1
-            # if self.frame >= data_number:
-            #     self.frame = 0
+            self.frame += 1
+            if self.frame >= data_number:
+                self.frame = 0
             self.get_logger().info(f'Publishing')
 
 class Processor_ROS:
@@ -151,7 +150,7 @@ class DemoDataset(DatasetTemplate):
 
     def __getitem__(self, index):
         if self.ext == '.bin':
-            points = np.fromfile(self.sample_file_list[index], dtype=np.float32).reshape(-1, 4)
+            points = np.fromfile(self.sample_file_list[index], dtype=np.float64).reshape(-1, 4)
         elif self.ext == '.npy':
             points = np.load(self.sample_file_list[index])
         else:

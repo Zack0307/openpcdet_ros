@@ -13,7 +13,7 @@ class PcdetNode(Node):
             super().__init__('CaDDN_node')
             self.frame = 0
             self.cam_pub = self.create_publisher(Image, '/camera_pub_image', 10)
-            self.cam_sub = self.create_subscription(Image, '/cam_sub_image', self.subscribe_callback,  10)
+            self.cam_sub = self.create_subscription(Image, '/cam_sub_image', cam_subscribe_callback,  10)
             self.PCL = self.create_publisher(PointCloud2, '/kitti_pcl', 10)
             self.marker = self.create_publisher(Marker, '/marker_gaze', 10)
             self.box = self.create_publisher(MarkerArray, '/kitti_3d_box', 10)
@@ -23,7 +23,7 @@ class PcdetNode(Node):
             self.model.eval()
             self.timer = self.create_timer(0.1, self.publish_video)  # 每 0.1 秒呼叫一次
     
-    def publish_data(self):
+    def publish_video(self):
             
             image_publish(self.frame, self.cam_pub)
             cam_publish(self.frame, self.PCL, self.get_clock())

@@ -63,7 +63,7 @@ def cam_publish(frame, cam_pub):
         imgmsg = cv_inference(frame)
         cam_pub.publish(cv_bridge.cv2_to_imgmsg(frame, encoding = 'bgr8'))
 
-def subscribe_callback(self, data):
+def cam_subscribe_callback(self, data):
         # Convert ROS Image message to OpenCV image
         current_frame = cv_bridge.imgmsg_to_cv2(data, desired_encoding = 'bgr8')
         # Display image
@@ -91,22 +91,23 @@ def publish_pcl(frame, PCL, clock):
     PCL.publish(pcl2.create_cloud_xyz32(header, pcl[:, :3]))
 
     
-def cv_inference(self, frame):
-        img = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
-        img = PILImage.fromarray(img)
-        img = self.transforms(img).unsqueeze(0)
-        if torch.cuda.is_available():
-            img = img.to(device)
-        with torch.no_grad():
-            output = self.model(img)['out'][0]   #['out']：取出主要輸出張量
-        output_predictions = output.argmax(0)
-        output_predictions = output_predictions.byte().cpu().numpy()
-        output_predictions = cv.applyColorMap(output_predictions, cv.COLORMAP_JET)
-        output_predictions = cv.cvtColor(output_predictions, cv.COLOR_RGB2BGR)
-        img_tomsg = self.cvbr.cv2_to_imgmsg(output_predictions, encoding='bgr8')
-        return img_tomsg
+def cv_inference(frame):
+        # img = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
+        # img = PILImage.fromarray(img)
+        # img = transforms(img).unsqueeze(0)
+        # if torch.cuda.is_available():
+        #     img = img.to(device)
+        # with torch.no_grad():
+        #     output = model(img)['out'][0]   #['out']：取出主要輸出張量
+        # output_predictions = output.argmax(0)
+        # output_predictions = output_predictions.byte().cpu().numpy()
+        # output_predictions = cv.applyColorMap(output_predictions, cv.COLORMAP_JET)
+        # output_predictions = cv.cvtColor(output_predictions, cv.COLOR_RGB2BGR)
+        # img_tomsg = cv_bridge.cv2_to_imgmsg(output_predictions, encoding='bgr8')
+        # return img_tomsg
+        pass
 
-def rslidar_callback(msg):
+def lidar_callback(msg, proc_1):
     select_boxs, select_types = [],[]
     if proc_1.no_frame_id:
         proc_1.set_viz_frame_id(msg.header.frame_id)
@@ -155,94 +156,4 @@ def xyz_array_to_pointcloud2(points_sum, stamp=None, frame_id=None):
     msg.is_dense = int(np.isfinite(points_sum).all())
     msg.data = np.asarray(points_sum, np.float32).tostring()
     return msg
-    
-class Processor_ROS:
-    def __init__(self, config_path, model_path):
-        self.points = None
-        self.config_path = config_path
-        self.model_path = model_path
-        self.device = None
-        self.net = None
-        self.voxel_generator = None
-        self.inputs = None
-        self.pub_rviz = None
-        self.no_frame_id = True
-        self.rate = RATE_VIZ
-
-    def set_pub_rviz(self, box3d_pub, marker_frame_id = 'velodyne'):
-        self.pub_rviz = Draw3DBox(box3d_pub, marker_frame_id, self.rate)
-    
-    def set_viz_frame_id(self, marker_frame_id):
-        self.pub_rviz.set_frame_id(marker_frame_id)
-
-    def initialize(self):
-        self.read_config()
-        
-    def read_config(self):
-        config_path = self.config_path
-        cfg_from_yaml_file(self.config_path, cfg)
-        self.logger = common_utils.create_logger()
-        self.demo_dataset = DemoDataset(
-            dataset_cfg=cfg.DATA_CONFIG, class_names=cfg.CLASS_NAMES, training=False,
-            root_path=Path("/home/kin/workspace/OpenPCDet/tools/000002.bin"),
-            ext='.bin')
-        
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-        self.net = build_network(model_cfg=cfg.MODEL, num_class=len(cfg.CLASS_NAMES), dataset=self.demo_dataset)
-        print("Model path: ", self.model_path)
-        self.net.load_params_from_file(filename=self.model_path, logger=self.logger, to_cpu=True)
-        self.net = self.net.to(self.device).eval()
-
-    def get_template_prediction(self, num_samples):
-        ret_dict = {
-            'name': np.zeros(num_samples), 'truncated': np.zeros(num_samples),
-            'occluded': np.zeros(num_samples), 'alpha': np.zeros(num_samples),
-            'bbox': np.zeros([num_samples, 4]), 'dimensions': np.zeros([num_samples, 3]),
-            'location': np.zeros([num_samples, 3]), 'rotation_y': np.zeros(num_samples),
-            'score': np.zeros(num_samples), 'boxes_lidar': np.zeros([num_samples, 7])
-        }
-        return ret_dict
-
-    def run(self, points, frame):
-        t_t = time.time()
-        num_features = 4 # X,Y,Z,intensity       
-        self.points = points.reshape([-1, num_features])
-        assert self.points.shape[0] > 0, "No points in lidar data, please check your lidar message."
-        print(f"Total points: {self.points.shape[0]}")
-        timestamps = np.empty((len(self.points),1))
-        timestamps[:] = frame
-
-        input_dict = {
-            'points': self.points,
-            'frame_id': frame,
-        }
-
-        data_dict = self.demo_dataset.prepare_data(data_dict=input_dict)
-        data_dict = self.demo_dataset.collate_batch([data_dict])
-        load_data_to_gpu(data_dict)
-
-        torch.cuda.synchronize()
-        t = time.time()
-
-        pred_dicts, _ = self.net.forward(data_dict)
-        
-        torch.cuda.synchronize()
-        inference_time = time.time() - t
-        inference_time_list.append(inference_time)
-        mean_inference_time = sum(inference_time_list)/len(inference_time_list)
-
-        boxes_lidar = pred_dicts[0]["pred_boxes"].detach().cpu().numpy()
-        scores = pred_dicts[0]["pred_scores"].detach().cpu().numpy()
-        types = pred_dicts[0]["pred_labels"].detach().cpu().numpy()
-
-        pred_boxes = np.copy(boxes_lidar)
-        pred_dict = self.get_template_prediction(scores.shape[0])
-
-        pred_dict['name'] = np.array(cfg.CLASS_NAMES)[types - 1]
-        pred_dict['score'] = scores
-        pred_dict['boxes_lidar'] = pred_boxes
-
-        return scores, boxes_lidar, types, pred_dict
- 
 

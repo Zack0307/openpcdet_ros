@@ -15,10 +15,10 @@ class PcdetNode(Node):
             self.frame = 0
             self.cam_pub = self.create_publisher(Image, '/camera_pub_image', 10)
             self.cam_sub = self.create_subscription(Image, '/cam_sub_image', cam_subscribe_callback,  10)
-            self.PCL = self.create_subscription(PointCloud2, '/kitti_pcl', pointcloud_topic[0], lidar_callback, 1)
+            self.PCL = self.create_subscription(PointCloud2, '/kitti_pcl', lidar_callback, 1)
             self.marker = self.create_publisher(Marker, '/marker_gaze', 10)
             self.box = self.create_publisher(MarkerArray, '/kitti_3d_box', 10)
-            self.proc_1 = Processor_ROS(self, cfg_root, model_path)
+            self.proc_1 = Processor_ROS(cfg_root, model_path)
             self.proc_1.initialize()
             self.timer = self.create_timer(0.1, self.publish_data)  # 每 0.1 秒呼叫一次
     
@@ -59,12 +59,13 @@ class Processor_ROS:
         self.read_config()
         
     def read_config(self):
-        config_path = self.config_path
+        # config_path = self.config_path
+        # cfg_from_yaml_file(cfg.ROOT_DIR / 'tools/cfgs/kitti_models/CaDDN.yaml', cfg)
         cfg_from_yaml_file(self.config_path, cfg)
         self.logger = common_utils.create_logger()
         self.demo_dataset = DemoDataset(
             dataset_cfg=cfg.DATA_CONFIG, class_names=cfg.CLASS_NAMES, training=False,
-            root_path=Path("/home/kin/workspace/OpenPCDet/tools/000002.bin"),
+            root_path=Path("/home/zack/Desktop/OpenPCDet/data/kitti/training/velodyne/000002.bin"),
             ext='.bin')
         
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

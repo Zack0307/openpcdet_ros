@@ -19,11 +19,13 @@ from pathlib import Path
 from openpcdet_ros.draw3d_utils import *
 from openpcdet_ros.__init__ import *
 import yaml
+import sys
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 cv_bridge = CvBridge()
 Image_DATA_PATH = '/home/zack/kitti/2011_09_26_drive_0005_sync/2011_09_26/2011_09_26_drive_0005_sync'
 data_number = len(os.listdir(os.path.join(Image_DATA_PATH, 'image_02/data')))
+sys.path.append("/home/zack/Desktop/OpenPCDet")
 
 # OpenPCDet imports
 from pcdet.datasets import DatasetTemplate
@@ -40,8 +42,10 @@ df.columns = TRACKING_COLUMN_NAMES
 df.loc[df.type.isin(['Van','Truck','Tram']), 'type'] = 'Car'
 df = df[df.type.isin(['Car','Pedestrian','Cyclist'])]
 
+
 #config file
-BASE_DIR = os.path.abspath(os.path.join( os.path.dirname( __file__ ), '..' ))
+
+BASE_DIR = "/home/zack/ros2_ws/src/openpcdet_ros"
 with open(f"{BASE_DIR}/launch/config.yaml", 'r') as f:
     try:
         para_cfg = yaml.safe_load(f, Loader=yaml.FullLoader)
@@ -54,6 +58,9 @@ threshold = para_cfg["threshold"]
 pointcloud_topic = para_cfg["pointcloud_topic"]
 RATE_VIZ = para_cfg["viz_rate"]
 inference_time_list = []
+
+# config = cfg_from_yaml_file(cfg.ROOT_DIR / 'tools/cfgs/dataset_configs/kitti_dataset.yaml', cfg)
+
 
 def cam_publish(frame, cam_pub):
     cap = cv.VideoCapture(0)
@@ -157,3 +164,6 @@ def xyz_array_to_pointcloud2(points_sum, stamp=None, frame_id=None):
     msg.data = np.asarray(points_sum, np.float64).tostring()
     return msg
 
+# if __name__ == "__main__":
+#     print(cfg_root)
+#     print(config)

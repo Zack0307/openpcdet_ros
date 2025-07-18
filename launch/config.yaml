@@ -1,8 +1,8 @@
 # which go to the model you want to use
-cfg_root: "/home/zack/Desktop/CADDN/tools/cfgs/kitti_models/CaDDN.yaml"
+cfg_root: "/home/zack/Desktop/OpenPCDet/tools/cfgs/kitti_models/CaDDN.yaml"
 
 # which go to the .pth
-model_path: "/home/zack/Desktop/CADDN/checkpoints/deeplabv3_resnet101_coco-586e9e4e.pth"
+model_path: "/home/zack/Desktop/OpenPCDet/checkpoints/latest_model.pth"
 
 # pointcloud_topic in the bag if you are not sure
 # rosbag info xxx.bag check the topic name

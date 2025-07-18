@@ -114,31 +114,6 @@ def cv_inference(frame):
         # return img_tomsg
         pass
 
-def lidar_callback(msg, proc_1):
-    select_boxs, select_types = [],[]
-    if proc_1.no_frame_id:
-        proc_1.set_viz_frame_id(msg.header.frame_id)
-        print(f"{bc.OKGREEN} setting marker frame id to lidar: {msg.header.frame_id} {bc.ENDC}")
-        proc_1.no_frame_id = False
-
-    frame = msg.header.seq # frame id -> not timestamp
-    msg_cloud = ros2_numpy.point_cloud2.pointcloud2_to_array(msg)
-    np_p = get_xyz_points(msg_cloud, True)
-    scores, dt_box_lidar, types, pred_dict = proc_1.run(np_p, frame)
-    for i, score in enumerate(scores):
-        if score>threshold:
-            select_boxs.append(dt_box_lidar[i])
-            select_types.append(pred_dict['name'][i])
-    if(len(select_boxs)>0):
-        proc_1.pub_rviz.publish_3dbox(np.array(select_boxs), -1, pred_dict['name'])
-        print_str = f"Frame id: {frame}. Prediction results: \n"
-        for i in range(len(pred_dict['name'])):
-            print_str += f"Type: {pred_dict['name'][i]:.3s} Prob: {scores[i]:.2f}\n"
-        print(print_str)
-    else:
-        print(f"\n{bc.FAIL} No confident prediction in this time stamp {bc.ENDC}\n")
-    print(f" -------------------------------------------------------------- ")
-
 
 def xyz_array_to_pointcloud2(points_sum, stamp=None, frame_id=None):
     """

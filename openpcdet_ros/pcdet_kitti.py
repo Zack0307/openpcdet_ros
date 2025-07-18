@@ -15,7 +15,7 @@ class PcdetNode(Node):
             self.frame = 0
             self.cam_pub = self.create_publisher(Image, '/camera_pub_image', 10)
             self.cam_sub = self.create_subscription(Image, '/cam_sub_image', cam_subscribe_callback,  10)
-            self.PCL = self.create_subscription(PointCloud2, '/kitti_pcl', lidar_callback, 1)
+            self.PCL = self.create_subscription(PointCloud2, '/kitti_pcl', self.lidar_callback, 1)
             self.marker = self.create_publisher(Marker, '/marker_gaze', 10)
             self.box = self.create_publisher(MarkerArray, '/kitti_3d_box', 10)
             self.proc_1 = Processor_ROS(cfg_root, model_path)
@@ -24,17 +24,40 @@ class PcdetNode(Node):
     
     def publish_data(self):
             image_publish(self.frame, self.cam_pub)
-            cam_publish(self.frame, self.PCL, self.get_clock())
-            lidar_callback(self.PCL, self.proc_1)
-            self.proc_1.set_pub_rviz(self.box)
-            # publish_marker_array(self.marker, self.get_clock())
-            # publish_imu(self.frame, self.imu, self.get_clock())
-            # publish_gps(self.frame, self.gps, self.get_clock())
-            # publish_3d_box(self.frame, self.box, self.get_clock())
+            # cam_publish(self.frame, self.PCL)
             self.frame += 1
             if self.frame >= data_number:
                 self.frame = 0
             self.get_logger().info(f'Publishing')
+
+    def lidar_callback(self, msg:PointCloud2, proc_1):
+        proc_1.set_pub_rviz(msg.header.frame_id)
+        select_boxs, select_types = [],[]
+        if proc_1.no_frame_id:
+            proc_1.set_viz_frame_id(msg.header.frame_id)
+            print(f"{bc.OKGREEN} setting marker frame id to lidar: {msg.header.frame_id} {bc.ENDC}")
+            proc_1.no_frame_id = False
+
+        
+        frame = msg.header.seq # frame id -> not timestamp
+        msg_cloud = ros2_numpy.point_cloud2.pointcloud2_to_array(msg)
+        np_p = get_xyz_points(msg_cloud, True)
+        scores, dt_box_lidar, types, pred_dict = proc_1.run(np_p, frame)
+        for i, score in enumerate(scores):
+            if score>threshold:
+                select_boxs.append(dt_box_lidar[i])
+                select_types.append(pred_dict['name'][i])
+        if(len(select_boxs)>0):
+            proc_1.pub_rviz.publish_3dbox(np.array(select_boxs), -1, pred_dict['name'])
+            print_str = f"Frame id: {frame}. Prediction results: \n"
+            for i in range(len(pred_dict['name'])):
+                print_str += f"Type: {pred_dict['name'][i]:.3s} Prob: {scores[i]:.2f}\n"
+            print(print_str)
+        else:
+            print(f"\n{bc.FAIL} No confident prediction in this time stamp {bc.ENDC}\n")
+        print(f" -------------------------------------------------------------- ")
+
+    
 
 class Processor_ROS:
     def __init__(self, config_path, model_path):
@@ -174,6 +197,7 @@ def main(args=None):
 
 if __name__ == "__main__":
     main()
+    print(device)
 
 
 

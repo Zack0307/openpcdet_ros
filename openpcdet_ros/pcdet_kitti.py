@@ -24,6 +24,7 @@ class PcdetNode(Node):
     
     def publish_data(self):
             image_publish(self.frame, self.cam_pub)
+            publish_pcl(self.frame, self.get_clock())
             # cam_publish(self.frame, self.PCL)
             self.frame += 1
             if self.frame >= data_number:

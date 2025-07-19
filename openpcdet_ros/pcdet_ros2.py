@@ -26,7 +26,8 @@ class PcdetNode(Node):
     def publish_video(self):
             
             image_publish(self.frame, self.cam_pub)
-            cam_publish(self.frame, self.PCL, self.get_clock())
+            publish_pcl(self.frame, self.get_clock())
+            cam_publish(self.frame, self.PCL)
             # publish_marker_array(self.marker, self.get_clock())
             # publish_imu(self.frame, self.imu, self.get_clock())
             # publish_gps(self.frame, self.gps, self.get_clock())

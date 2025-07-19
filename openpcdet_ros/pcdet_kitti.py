@@ -14,7 +14,7 @@ class PcdetNode(Node):
             super().__init__('CaDDN_node')
             self.frame = 0
             self.cam_pub = self.create_publisher(Image, '/camera_pub_image', 10)
-            self.cam_sub = self.create_subscription(Image, '/cam_sub_image', cam_subscribe_callback,  10)
+            self.cam_sub = self.create_subscription(Image, '/camera_pub_image', cam_subscribe_callback,  10)
             self.PCL = self.create_subscription(PointCloud2, '/kitti_pcl', self.lidar_callback, 1)
             self.marker = self.create_publisher(Marker, '/marker_gaze', 10)
             self.box = self.create_publisher(MarkerArray, '/kitti_3d_box', 10)

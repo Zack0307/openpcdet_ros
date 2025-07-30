@@ -1,0 +1,16 @@
+# which go to the model you want to use
+cfg_root: "/home/zack/Desktop/OpenPCDet/tools/cfgs/kitti_models/pv_rcnn.yaml"
+
+# which go to the .pth
+model_path: "/home/zack/Desktop/OpenPCDet/checkpoints/pv_rcnn_8369.pth"
+
+# pointcloud_topic in the bag if you are not sure
+# rosbag info xxx.bag check the topic name
+pointcloud_topic: "/home/zack/kitti/2011_09_26_drive_0005_sync/2011_09_26/2011_09_26_drive_0005_sync/velodyne_points/data" # default is from kitti2bag: /velodyne_points
+
+#depth map(if you use CaDDN.yaml)
+depth_topic: "/home/zack/kitti/data_depth_velodyne/val/2011_09_26_drive_0005_sync/proj_depth/velodyne_raw/image_02"
+# only the predict probablity over this threshold will be draw a box
+threshold: 0.8
+
+viz_rate: 1.0

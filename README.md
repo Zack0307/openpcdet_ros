@@ -70,6 +70,7 @@ ros2 launch openpcdet 3d_object_detector.launch
 ## Other infos
 
 This repo has a Chinese blog also to read through [【点云检测】OpenPCDet 教程系列 [1] 安装 与 ROS运行](https://www.cnblogs.com/kin-zhang/p/17002980.html)
+kitti dataset: https://www.cvlibs.net/datasets/kitti/raw_data.php (raw data)
 
 ### Acknowledgement
 
